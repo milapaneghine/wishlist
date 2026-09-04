@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meus Desejos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #FAF7FC;
+    --surface: #FFFFFF;
+    --ink: #3A3450;
+    --ink-soft: #8B849C;
+    --ink-faint: #C3BDD1;
+    --line: #ECE7F3;
+    --shadow: 0 8px 24px rgba(90, 70, 130, 0.08);
+    --radius-lg: 22px;
+    --radius-md: 14px;
+    --radius-pill: 999px;
+
+    --lav-bg:#EDE7F9;   --lav-ink:#6B5B95; --lav-strong:#B39DDB;
+    --mint-bg:#E1F5EA;  --mint-ink:#3F8F63; --mint-strong:#8FD3AD;
+    --peach-bg:#FCEBDA; --peach-ink:#BE7A3B; --peach-strong:#F2BE8E;
+    --rose-bg:#FBE7EC;  --rose-ink:#C15C74; --rose-strong:#EFA0AF;
+    --sky-bg:#E6F2FA;   --sky-ink:#3E7DA6;  --sky-strong:#9BC8E8;
+  }
+
+  *{ box-sizing:border-box; }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+  }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 0%, #F1EAFB 0%, transparent 45%),
+      radial-gradient(circle at 100% 20%, #E9F6EF 0%, transparent 40%),
+      var(--bg);
+    font-family:'Nunito', system-ui, sans-serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .app{
+    max-width:560px;
+    margin:0 auto;
+    padding:28px 18px 80px;
+  }
+
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:22px;
+  }
+  header h1{
+    font-size:1.65rem;
+    font-weight:800;
+    margin:0;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    letter-spacing:-0.01em;
+  }
+  header h1 .heart{
+    font-size:1.3rem;
+    display:inline-block;
+  }
+  .header-actions{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .icon-btn{
+    width:38px; height:38px;
+    border-radius:var(--radius-pill);
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink-soft);
+    font-size:1rem;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .icon-btn:hover{ background:var(--lav-bg); color:var(--lav-ink); }
+  .icon-btn:active{ transform:scale(0.92); }
+
+  .sync-dot{
+    width:9px; height:9px; border-radius:50%;
+    background:var(--ink-faint);
+    transition:background .3s ease;
+  }
+  .sync-dot.synced{ background:#7CC79A; }
+  .sync-dot.syncing{ background:#EFC46B; animation:pulse 1s infinite ease-in-out; }
+  .sync-dot.error{ background:#E08A94; }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+  /* Tabs */
+  .tabs-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .tabs{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding:2px;
+    scrollbar-width:none;
+    flex:1;
+  }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tab{
+    flex:0 0 auto;
+    padding:9px 16px;
+    border-radius:var(--radius-pill);
+    border:1px solid transparent;
+    font-family:inherit;
+    font-weight:700;
+    font-size:0.88rem;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .tab:active{ transform:scale(0.96); }
+  .tab.active{ box-shadow:var(--shadow); }
+
+  .add-list-btn{
+    flex:0 0 auto;
+    width:38px; height:38px;
+    border-radius:50%;
+    border:1.5px dashed var(--ink-faint);
+    background:transparent;
+    color:var(--ink-soft);
+    font-size:1.2rem;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .add-list-btn:hover{ border-color:var(--lav-strong); color:var(--lav-ink); }
+
+  /* List toolbar */
+  .list-toolbar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .list-name-input{
+    flex:1;
+    font-family:inherit;
+    font-size:1.1rem;
+    font-weight:700;
+    border:none;
+    background:transparent;
+    color:var(--ink);
+    padding:4px 2px;
+    border-bottom:2px solid transparent;
+    min-width:0;
+  }
+  .list-name-input:focus{
+    outline:none;
+    border-bottom:2px solid var(--lav-strong);
+  }
+  .list-count{
+    font-size:0.8rem;
+    color:var(--ink-soft);
+    white-space:nowrap;
+  }
+
+  /* Add item */
+  .add-item-form{
+    display:flex;
+    gap:8px;
+    margin-bottom:18px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-pill);
+    padding:5px 5px 5px 18px;
+    box-shadow:var(--shadow);
+  }
+  .add-item-form input{
+    flex:1;
+    border:none;
+    outline:none;
+    font-family:inherit;
+    font-size:0.95rem;
+    background:transparent;
+    color:var(--ink);
+    min-width:0;
+  }
+  .add-item-form input::placeholder{ color:var(--ink-faint); }
+  .add-item-form button{
+    border:none;
+    background:var(--ink);
+    color:#fff;
+    font-family:inherit;
+    font-weight:700;
+    font-size:0.88rem;
+    padding:10px 18px;
+    border-radius:var(--radius-pill);
+    cursor:pointer;
+    transition:transform .15s ease, opacity .15s ease;
+  }
+  .add-item-form button:active{ transform:scale(0.96); }
+  .add-item-form button:disabled{ opacity:.4; cursor:default; }
+
+  /* Items */
+  .items{
+    list-style:none;
+    margin:0; padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    padding:13px 14px;
+  }
+  .item-check{
+    flex:0 0 auto;
+    width:24px; height:24px;
+    border-radius:50%;
+    border:2px solid var(--ink-faint);
+    background:transparent;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    color:transparent;
+    font-size:0.75rem;
+    transition:background .18s ease, border-color .18s ease, transform .18s ease;
+  }
+  .item-check:hover{ border-color:var(--lav-strong); }
+  .item.checked .item-check{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:#fff;
+    animation:pop .28s ease;
+  }
+  @keyframes pop{ 0%{transform:scale(0.7);} 60%{transform:scale(1.15);} 100%{transform:scale(1);} }
+
+  .item-text{
+    flex:1;
+    font-size:0.98rem;
+    line-height:1.4;
+    word-break:break-word;
+    transition:color .18s ease;
+  }
+  .item.checked .item-text{
+    text-decoration:line-through;
+    color:var(--ink-faint);
+  }
+
+  .item-delete{
+    flex:0 0 auto;
+    border:none;
+    background:transparent;
+    color:var(--ink-faint);
+    font-size:1.1rem;
+    cursor:pointer;
+    padding:4px 6px;
+    line-height:1;
+    transition:color .15s ease, transform .15s ease;
+  }
+  .item-delete:hover{ color:var(--rose-ink); transform:scale(1.1); }
+
+  .list-actions-row{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:14px;
+  }
+  .text-btn{
+    border:none;
+    background:transparent;
+    color:var(--ink-soft);
+    font-family:inherit;
+    font-size:0.82rem;
+    font-weight:700;
+    cursor:pointer;
+    padding:6px 4px;
+  }
+  .text-btn:hover{ color:var(--rose-ink); }
+
+  .empty-state{
+    text-align:center;
+    padding:50px 20px;
+    color:var(--ink-soft);
+  }
+  .empty-state .big{
+    font-size:2rem;
+    margin-bottom:8px;
+  }
+  .empty-state p{ margin:4px 0 0; font-size:0.92rem; }
+
+  /* Modal */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(58,52,80,0.35);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+    z-index:50;
+  }
+  .modal{
+    background:var(--surface);
+    border-radius:var(--radius-lg);
+    padding:26px;
+    max-width:420px;
+    width:100%;
+    max-height:86vh;
+    overflow-y:auto;
+    box-shadow:0 20px 50px rgba(58,52,80,0.25);
+  }
+  .modal h2{
+    margin:0 0 4px;
+    font-size:1.25rem;
+    font-weight:800;
+  }
+  .modal .sub{
+    color:var(--ink-soft);
+    font-size:0.85rem;
+    margin:0 0 18px;
+    line-height:1.5;
+  }
+  .field{ margin-bottom:14px; }
+  .field label{
+    display:block;
+    font-size:0.8rem;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+  }
+  .field input{
+    width:100%;
+    font-family:inherit;
+    font-size:0.92rem;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    outline:none;
+    background:#FCFBFE;
+  }
+  .field input:focus{ border-color:var(--lav-strong); }
+  .field-hint{
+    font-size:0.75rem;
+    color:var(--ink-faint);
+    margin-top:4px;
+  }
+  .field-hint a{ color:var(--lav-ink); }
+
+  .modal-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:6px;
+  }
+  .btn{
+    flex:1 1 auto;
+    border:none;
+    border-radius:var(--radius-pill);
+    padding:10px 16px;
+    font-family:inherit;
+    font-weight:700;
+    font-size:0.85rem;
+    cursor:pointer;
+    transition:transform .15s ease, opacity .15s ease;
+  }
+  .btn:active{ transform:scale(0.97); }
+  .btn-primary{ background:var(--ink); color:#fff; }
+  .btn-secondary{ background:var(--lav-bg); color:var(--lav-ink); }
+  .btn-ghost{ background:transparent; color:var(--ink-soft); border:1px solid var(--line); }
+
+  .divider{
+    border:none;
+    border-top:1px solid var(--line);
+    margin:18px 0;
+  }
+
+  .status-line{
+    font-size:0.78rem;
+    color:var(--ink-soft);
+    margin-top:10px;
+    min-height:16px;
+  }
+  .status-line.err{ color:var(--rose-ink); }
+  .status-line.ok{ color:var(--mint-ink); }
+
+  .modal-close-row{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:16px;
+  }
+
+  input[type=file]{ display:none; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <h1><span class="heart">✦</span> Meus Desejos</h1>
+    <div class="header-actions">
+      <button class="icon-btn" id="sync-btn" title="Sincronizar agora"><span class="sync-dot" id="sync-dot"></span></button>
+      <button class="icon-btn" id="settings-btn" title="Configurações">⚙</button>
+    </div>
+  </header>
+
+  <div class="tabs-row">
+    <div class="tabs" id="tabs"></div>
+    <button class="add-list-btn" id="add-list-btn" title="Nova lista">+</button>
+  </div>
+
+  <div class="list-toolbar">
+    <input class="list-name-input" id="list-name-input" maxlength="40" />
+    <span class="list-count" id="list-count"></span>
+  </div>
+
+  <form class="add-item-form" id="add-item-form">
+    <input id="new-item-input" placeholder="Adicionar um desejo..." maxlength="140" autocomplete="off" />
+    <button type="submit">Adicionar</button>
+  </form>
+
+  <ul class="items" id="items"></ul>
+  <div class="empty-state" id="empty-state" hidden>
+    <div class="big">☾</div>
+    <div><strong>Essa lista está vazia</strong></div>
+    <p>Adicione o primeiro item que você deseja.</p>
+  </div>
+
+  <div class="list-actions-row" id="list-actions-row">
+    <button class="text-btn" id="delete-list-btn">Excluir esta lista</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="settings-modal" hidden>
+  <div class="modal">
+    <h2>Configurações</h2>
+    <p class="sub">Conecte um Gist do GitHub para manter suas listas sincronizadas entre dispositivos. Sem isso, os dados ficam salvos só neste navegador.</p>
+
+    <div class="field">
+      <label for="token-input">Personal Access Token</label>
+      <input id="token-input" type="password" placeholder="ghp_..." autocomplete="off" />
+      <div class="field-hint">Precisa do escopo <strong>gist</strong>. Crie em <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">github.com/settings/tokens</a>.</div>
+    </div>
+
+    <div class="field">
+      <label for="gist-input">Gist ID</label>
+      <input id="gist-input" placeholder="Cole o ID de um gist existente" autocomplete="off" />
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="create-gist-btn">Criar novo Gist</button>
+      <button class="btn btn-primary" id="save-settings-btn">Salvar e sincronizar</button>
+    </div>
+    <div class="status-line" id="settings-status"></div>
+
+    <hr class="divider">
+
+    <p class="sub" style="margin-bottom:10px;">Backup manual (sem depender do Gist):</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="export-btn">Exportar JSON</button>
+      <button class="btn btn-ghost" id="import-btn">Importar JSON</button>
+      <input type="file" id="import-file" accept="application/json">
+    </div>
+
+    <div class="modal-close-row">
+      <button class="btn btn-ghost" id="close-settings-btn">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "wishlist-app-data-v1";
+  var SETTINGS_KEY = "wishlist-app-settings-v1";
+  var GIST_FILENAME = "meus-desejos.json";
+
+  var PALETTE = [
+    {bg:"var(--lav-bg)",  ink:"var(--lav-ink)",  strong:"var(--lav-strong)"},
+    {bg:"var(--mint-bg)", ink:"var(--mint-ink)", strong:"var(--mint-strong)"},
+    {bg:"var(--peach-bg)",ink:"var(--peach-ink)",strong:"var(--peach-strong)"},
+    {bg:"var(--rose-bg)", ink:"var(--rose-ink)", strong:"var(--rose-strong)"},
+    {bg:"var(--sky-bg)",  ink:"var(--sky-ink)",  strong:"var(--sky-strong)"}
+  ];
+
+  function uid(){
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "id-" + Date.now() + "-" + Math.random().toString(36).slice(2,9);
+  }
+
+  function defaultState(){
+    return {
+      lists: [
+        { id: uid(), name: "Geral", colorIndex: 0, items: [] }
+      ],
+      activeListId: null
+    };
+  }
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        var s = defaultState();
+        s.activeListId = s.lists[0].id;
+        return s;
+      }
+      var parsed = JSON.parse(raw);
+      if (!parsed.lists || !parsed.lists.length){
+        var s2 = defaultState();
+        s2.activeListId = s2.lists[0].id;
+        return s2;
+      }
+      if (!parsed.activeListId || !parsed.lists.some(function(l){ return l.id === parsed.activeListId; })){
+        parsed.activeListId = parsed.lists[0].id;
+      }
+      return parsed;
+    }catch(e){
+      var s3 = defaultState();
+      s3.activeListId = s3.lists[0].id;
+      return s3;
+    }
+  }
+
+  function loadSettings(){
+    try{
+      var raw = localStorage.getItem(SETTINGS_KEY);
+      return raw ? JSON.parse(raw) : { token:"", gistId:"" };
+    }catch(e){
+      return { token:"", gistId:"" };
+    }
+  }
+
+  function saveSettings(s){
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  }
+
+  var state = loadState();
+  var settings = loadSettings();
+  var syncTimer = null;
+
+  // ---------- DOM refs ----------
+  var tabsEl = document.getElementById("tabs");
+  var addListBtn = document.getElementById("add-list-btn");
+  var listNameInput = document.getElementById("list-name-input");
+  var listCountEl = document.getElementById("list-count");
+  var addItemForm = document.getElementById("add-item-form");
+  var newItemInput = document.getElementById("new-item-input");
+  var itemsEl = document.getElementById("items");
+  var emptyStateEl = document.getElementById("empty-state");
+  var deleteListBtn = document.getElementById("delete-list-btn");
+  var listActionsRow = document.getElementById("list-actions-row");
+
+  var settingsBtn = document.getElementById("settings-btn");
+  var settingsModal = document.getElementById("settings-modal");
+  var closeSettingsBtn = document.getElementById("close-settings-btn");
+  var tokenInput = document.getElementById("token-input");
+  var gistInput = document.getElementById("gist-input");
+  var saveSettingsBtn = document.getElementById("save-settings-btn");
+  var createGistBtn = document.getElementById("create-gist-btn");
+  var settingsStatus = document.getElementById("settings-status");
+  var exportBtn = document.getElementById("export-btn");
+  var importBtn = document.getElementById("import-btn");
+  var importFile = document.getElementById("import-file");
+
+  var syncBtn = document.getElementById("sync-btn");
+  var syncDot = document.getElementById("sync-dot");
+
+  function getActiveList(){
+    return state.lists.find(function(l){ return l.id === state.activeListId; });
+  }
+
+  // ---------- Rendering ----------
+  function renderTabs(){
+    tabsEl.innerHTML = "";
+    state.lists.forEach(function(list){
+      var pal = PALETTE[list.colorIndex % PALETTE.length];
+      var btn = document.createElement("button");
+      btn.className = "tab" + (list.id === state.activeListId ? " active" : "");
+      btn.textContent = list.name || "Sem nome";
+      var isActive = list.id === state.activeListId;
+      btn.style.background = isActive ? pal.strong : pal.bg;
+      btn.style.color = isActive ? "#fff" : pal.ink;
+      btn.addEventListener("click", function(){
+        state.activeListId = list.id;
+        persistLocal();
+        renderAll();
+      });
+      tabsEl.appendChild(btn);
+    });
+  }
+
+  function renderToolbar(){
+    var list = getActiveList();
+    if (!list) return;
+    listNameInput.value = list.name;
+    var total = list.items.length;
+    var done = list.items.filter(function(i){ return i.checked; }).length;
+    listCountEl.textContent = total ? (done + " de " + total + " marcados") : "";
+    listActionsRow.style.display = state.lists.length > 1 ? "flex" : "none";
+  }
+
+  function renderItems(){
+    var list = getActiveList();
+    itemsEl.innerHTML = "";
+    if (!list || !list.items.length){
+      emptyStateEl.hidden = false;
+      return;
+    }
+    emptyStateEl.hidden = true;
+
+    list.items.forEach(function(item){
+      var li = document.createElement("li");
+      li.className = "item" + (item.checked ? " checked" : "");
+
+      var check = document.createElement("button");
+      check.className = "item-check";
+      check.setAttribute("role","checkbox");
+      check.setAttribute("aria-checked", item.checked ? "true" : "false");
+      check.innerHTML = item.checked ? "&#10003;" : "";
+      check.addEventListener("click", function(){
+        item.checked = !item.checked;
+        persistLocal();
+        renderAll();
+        scheduleSync();
+      });
+
+      var text = document.createElement("span");
+      text.className = "item-text";
+      text.textContent = item.text;
+
+      var del = document.createElement("button");
+      del.className = "item-delete";
+      del.title = "Remover item";
+      del.innerHTML = "&times;";
+      del.addEventListener("click", function(){
+        list.items = list.items.filter(function(i){ return i.id !== item.id; });
+        persistLocal();
+        renderAll();
+        scheduleSync();
+      });
+
+      li.appendChild(check);
+      li.appendChild(text);
+      li.appendChild(del);
+      itemsEl.appendChild(li);
+    });
+  }
+
+  function renderAll(){
+    renderTabs();
+    renderToolbar();
+    renderItems();
+  }
+
+  function persistLocal(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  // ---------- List actions ----------
+  addListBtn.addEventListener("click", function(){
+    var name = prompt("Nome da nova lista (ex: Viagem, Livros, Casa nova):");
+    if (name === null) return;
+    name = name.trim();
+    if (!name) return;
+    var newList = { id: uid(), name: name, colorIndex: state.lists.length, items: [] };
+    state.lists.push(newList);
+    state.activeListId = newList.id;
+    persistLocal();
+    renderAll();
+    scheduleSync();
+  });
+
+  listNameInput.addEventListener("change", function(){
+    var list = getActiveList();
+    if (!list) return;
+    var v = listNameInput.value.trim();
+    list.name = v || "Sem nome";
+    persistLocal();
+    renderAll();
+    scheduleSync();
+  });
+
+  deleteListBtn.addEventListener("click", function(){
+    if (state.lists.length <= 1) return;
+    var list = getActiveList();
+    if (!list) return;
+    var ok = confirm('Excluir a lista "' + list.name + '" e todos os seus itens? Essa ação não pode ser desfeita.');
+    if (!ok) return;
+    state.lists = state.lists.filter(function(l){ return l.id !== list.id; });
+    state.activeListId = state.lists[0].id;
+    persistLocal();
+    renderAll();
+    scheduleSync();
+  });
+
+  // ---------- Item actions ----------
+  addItemForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    var val = newItemInput.value.trim();
+    if (!val) return;
+    var list = getActiveList();
+    if (!list) return;
+    list.items.push({ id: uid(), text: val, checked: false });
+    newItemInput.value = "";
+    persistLocal();
+    renderAll();
+    newItemInput.focus();
+    scheduleSync();
+  });
+
+  // ---------- Settings modal ----------
+  function openSettings(){
+    tokenInput.value = settings.token || "";
+    gistInput.value = settings.gistId || "";
+    settingsStatus.textContent = "";
+    settingsStatus.className = "status-line";
+    settingsModal.hidden = false;
+  }
+  function closeSettings(){ settingsModal.hidden = true; }
+
+  settingsBtn.addEventListener("click", openSettings);
+  closeSettingsBtn.addEventListener("click", closeSettings);
+  settingsModal.addEventListener("click", function(e){
+    if (e.target === settingsModal) closeSettings();
+  });
+
+  saveSettingsBtn.addEventListener("click", function(){
+    settings.token = tokenInput.value.trim();
+    settings.gistId = gistInput.value.trim();
+    saveSettings(settings);
+    settingsStatus.textContent = "Salvo. Sincronizando...";
+    settingsStatus.className = "status-line";
+    pullThenPush();
+  });
+
+  createGistBtn.addEventListener("click", function(){
+    var token = tokenInput.value.trim();
+    if (!token){
+      settingsStatus.textContent = "Cole seu token antes de criar um Gist.";
+      settingsStatus.className = "status-line err";
+      return;
+    }
+    settingsStatus.textContent = "Criando gist...";
+    settingsStatus.className = "status-line";
+    fetch("https://api.github.com/gists", {
+      method: "POST",
+      headers: {
+        "Authorization": "token " + token,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        description: "Meus Desejos - dados do app",
+        public: false,
+        files: { [GIST_FILENAME]: { content: JSON.stringify(state, null, 2) } }
+      })
+    }).then(function(res){
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    }).then(function(data){
+      settings.token = token;
+      settings.gistId = data.id;
+      saveSettings(settings);
+      gistInput.value = data.id;
+      settingsStatus.textContent = "Gist criado e conectado com sucesso!";
+      settingsStatus.className = "status-line ok";
+      setSyncDot("synced");
+    }).catch(function(err){
+      settingsStatus.textContent = "Erro ao criar gist: " + err.message;
+      settingsStatus.className = "status-line err";
+      setSyncDot("error");
+    });
+  });
+
+  // ---------- Export / Import ----------
+  exportBtn.addEventListener("click", function(){
+    var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "meus-desejos-backup.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  importBtn.addEventListener("click", function(){ importFile.click(); });
+  importFile.addEventListener("change", function(){
+    var file = importFile.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var parsed = JSON.parse(reader.result);
+        if (!parsed.lists || !parsed.lists.length) throw new Error("Formato inválido");
+        state = parsed;
+        if (!state.activeListId || !state.lists.some(function(l){ return l.id === state.activeListId; })){
+          state.activeListId = state.lists[0].id;
+        }
+        persistLocal();
+        renderAll();
+        settingsStatus.textContent = "Importado com sucesso!";
+        settingsStatus.className = "status-line ok";
+        scheduleSync();
+      }catch(e){
+        settingsStatus.textContent = "Não foi possível importar: " + e.message;
+        settingsStatus.className = "status-line err";
+      }
+    };
+    reader.readAsText(file);
+    importFile.value = "";
+  });
+
+  // ---------- Gist sync ----------
+  function setSyncDot(status){
+    syncDot.className = "sync-dot" + (status ? " " + status : "");
+  }
+
+  function scheduleSync(){
+    if (!settings.token || !settings.gistId) { setSyncDot(""); return; }
+    setSyncDot("syncing");
+    if (syncTimer) clearTimeout(syncTimer);
+    syncTimer = setTimeout(pushToGist, 2000);
+  }
+
+  function pushToGist(){
+    if (!settings.token || !settings.gistId) { setSyncDot(""); return; }
+    setSyncDot("syncing");
+    fetch("https://api.github.com/gists/" + settings.gistId, {
+      method: "PATCH",
+      headers: {
+        "Authorization": "token " + settings.token,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        files: { [GIST_FILENAME]: { content: JSON.stringify(state, null, 2) } }
+      })
+    }).then(function(res){
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    }).then(function(){
+      setSyncDot("synced");
+    }).catch(function(){
+      setSyncDot("error");
+    });
+  }
+
+  function pullFromGist(){
+    return new Promise(function(resolve){
+      if (!settings.token || !settings.gistId) { setSyncDot(""); resolve(false); return; }
+      setSyncDot("syncing");
+      fetch("https://api.github.com/gists/" + settings.gistId, {
+        headers: {
+          "Authorization": "token " + settings.token,
+          "Accept": "application/vnd.github+json"
+        }
+      }).then(function(res){
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      }).then(function(data){
+        var file = data.files && data.files[GIST_FILENAME];
+        if (file && file.content){
+          var parsed = JSON.parse(file.content);
+          if (parsed.lists && parsed.lists.length){
+            state = parsed;
+            if (!state.activeListId || !state.lists.some(function(l){ return l.id === state.activeListId; })){
+              state.activeListId = state.lists[0].id;
+            }
+            persistLocal();
+          }
+        }
+        setSyncDot("synced");
+        resolve(true);
+      }).catch(function(){
+        setSyncDot("error");
+        resolve(false);
+      });
+    });
+  }
+
+  function pullThenPush(){
+    pullFromGist().then(function(){
+      renderAll();
+      closeSettings();
+    });
+  }
+
+  syncBtn.addEventListener("click", function(){
+    if (!settings.token || !settings.gistId){
+      openSettings();
+      return;
+    }
+    pullFromGist().then(renderAll);
+  });
+
+  // ---------- Init ----------
+  renderAll();
+  if (settings.token && settings.gistId){
+    pullFromGist().then(renderAll);
+  }
+
+})();
+</script>
+</body>
+</html>
