@@ -775,6 +775,7 @@
       settingsStatus.textContent = "Gist criado e conectado com sucesso!";
       settingsStatus.className = "status-line ok";
       setSyncDot("synced");
+      setTimeout(closeSettings, 900);
     }).catch(function(err){
       settingsStatus.textContent = "Erro ao criar gist: " + err.message;
       settingsStatus.className = "status-line err";
@@ -891,9 +892,16 @@
   }
 
   function pullThenPush(){
-    pullFromGist().then(function(){
+    pullFromGist().then(function(ok){
       renderAll();
-      closeSettings();
+      if (ok){
+        settingsStatus.textContent = "Sincronizado com sucesso!";
+        settingsStatus.className = "status-line ok";
+        setTimeout(closeSettings, 900);
+      } else {
+        settingsStatus.textContent = "Não consegui sincronizar. Confira o token e o Gist ID e tente de novo.";
+        settingsStatus.className = "status-line err";
+      }
     });
   }
 
