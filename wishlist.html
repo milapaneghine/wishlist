@@ -28,6 +28,7 @@
   }
 
   *{ box-sizing:border-box; }
+  [hidden]{ display:none !important; }
   @media (prefers-reduced-motion: reduce){
     *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
   }
@@ -734,10 +735,19 @@
     if (e.target === settingsModal) closeSettings();
   });
 
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape" && !settingsModal.hidden) closeSettings();
+  });
+
   saveSettingsBtn.addEventListener("click", function(){
     settings.token = tokenInput.value.trim();
     settings.gistId = gistInput.value.trim();
     saveSettings(settings);
+    if (!settings.token || !settings.gistId){
+      setSyncDot("");
+      closeSettings();
+      return;
+    }
     settingsStatus.textContent = "Salvo. Sincronizando...";
     settingsStatus.className = "status-line";
     pullThenPush();
